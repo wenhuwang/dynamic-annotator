@@ -1,0 +1,2 @@
+# dynamic-annotator
+动态从prometheus服务获取指标并更新Kubernetes集群节点注解
