@@ -1,0 +1,63 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dynamic-annotator-clusterrole
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dynamic-annotator-sa
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dynamic-annotator-clusterrolebinding
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dynamic-annotator-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: dynamic-annotator-sa
+    namespace: kube-system
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamic-annotator
+  namespace: kube-system
+  labels:
+    component: dynamic-annotator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: dynamic-annotator
+  template:
+    metadata:
+      labels:
+        component: dynamic-annotator
+    spec:
+      serviceAccount: dynamic-annotator-sa
+      priorityClassName: system-cluster-critical
+      containers:
+        - name: dynamic-annotator
+          image: wenhuwang/dynamic-annotator:2021120310
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "50m"
